@@ -57,7 +57,7 @@ var plotData = function () {
 	};
 	let opts = {
 		width: window.innerWidth,
-		height: 210,
+		height: window.innerHeight / 6,
 		cursor: cursorOpts,
 		axes: [{}, { scale: "readings", side: 1, grid: { show: true } }],
 		scales: { auto: false, x: { time: false } },
