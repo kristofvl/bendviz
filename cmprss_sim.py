@@ -3,8 +3,6 @@ import csv
 import numpy as np
 import pandas as pd
 
-pkl = False  # read from pkl files
-
 for process in [1]:
 	proc = str(process)  # here we set the subject to compress
 	# arbitrarily skipped datapoints and quantization, just to test
