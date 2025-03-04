@@ -36,22 +36,36 @@ for process in [79]:
 		m[i][1] = np.amax(sensors[i][0:-2]) # max(sensors[i])
 		print("min: "+str(m[i][0])+", max:"+str(m[i][1]))
 	# adjust channels in plot:
+	torquesMin = [ m[0][0], m[1][0], m[2][0], m[6][0], m[7][0], m[12][0], m[13][0], m[14][0], m[18][0] ]
+	torquesMax = [ m[0][1], m[1][1], m[2][1], m[6][1], m[7][1], m[12][1], m[13][1], m[14][1], m[18][1] ]
+	tmin = np.amin( torquesMin )
+	tspan = (np.amax(torquesMax)-np.amin(torquesMin))
+	distMin = [ m[3][0],m[4][0],m[5][0],m[8][0],m[9][0],m[11][0],m[15][0],m[16][0],m[17][0],m[19][0]]
+	distMax = [ m[3][1],m[4][1],m[5][1],m[8][1],m[9][1],m[11][1],m[15][1],m[16][1],m[17][1],m[19][1]]
+	dmin = np.amin( distMin )
+	dspan = np.amax(distMax)-np.amin(distMin)
 	for i in range(len(sensors[0])-1):
 		for channel in range(numChannels):
 			if m[channel][0] == m[channel][1]:
 				sensors[channel][i] = 0
 			else:
-				sensors[channel][i] =  int( quant* ((sensors[channel][i]-m[channel][0])/(m[channel][1]-m[channel][0]) - 0.5) )
-				#sensors[channel][i] += quant*(channel)
+				if channel in [0,1,2,6,7,12,13,14,18]:  # Torque:
+					sensors[channel][i] =  int( quant* ((sensors[channel][i]-tmin)/tspan - 0.5) )
+				elif channel in [3,4,5,8,9,11,15,16,17,19]:  # Dist/ Angle:
+					sensors[channel][i] =  int( quant* ((sensors[channel][i]-dmin)/dspan - 0.5) )
+				else:
+					sensors[channel][i] =  int( quant* ((sensors[channel][i]-m[channel][0])/(m[channel][1]-m[channel][0]) - 0.5) )
 				# move in plot:
-			if channel<6:
-				sensors[channel][i] += 850
-			elif channel<10:
-				sensors[channel][i] += 650
-			elif channel<12:
+			if channel<3:
 				sensors[channel][i] += 450
+			elif channel<6:
+				sensors[channel][i] += 400
+			elif channel<10:
+				sensors[channel][i] += 300
+			elif channel<12:
+				sensors[channel][i] += 220
 			elif channel<18:
-				sensors[channel][i] += 250
+				sensors[channel][i] += 100
 
 
 	# write to file:

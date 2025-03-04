@@ -3,7 +3,7 @@ wl = window.location;
 proc = d.getElementById("procsel");
 proc.value = wl.search.substr(5) == "" ? "1" : wl.search.substr(5);
 proc.oninput = function (e) {
-	wl.href = "index.html?prc=" + proc.value;
+	wl.href = "index_new.html?prc=" + proc.value;
 };
 
 function loadScript(url, callback) {
@@ -85,22 +85,23 @@ var plotData = function () {
 		(u) => {
 			u.ctx.textAlign = "left";
 			u.ctx.fillStyle = "black";
-			u.ctx.fillText("Bend Die", 2, 10);
+			tpos = u.valToPos(bendDieLatT[0], "y", true);
+			u.ctx.fillText("Bend Die", 2, tpos - 90);
 			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Lateral Torque", 7, 40);
+			u.ctx.fillText("Lateral Torque", 7, tpos - 60);
 			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Rotating Torque", 7, 70);
+			u.ctx.fillText("Rotating Torque", 7, tpos - 30);
 			u.ctx.fillStyle = "blue";
-			u.ctx.fillText("Vertical Torque", 7, 100);
+			u.ctx.fillText("Vertical Torque", 7, tpos);
 			u.ctx.fillStyle = "purple";
-			u.ctx.fillText("Lateral Movement", 7, 130);
+			u.ctx.fillText("Lateral Movement", 7, tpos + 30);
 			u.ctx.fillStyle = "grey";
-			u.ctx.fillText("Rotating Angle", 7, 160);
+			u.ctx.fillText("Rotating Angle", 7, tpos + 60);
 			u.ctx.fillStyle = "brown";
-			u.ctx.fillText("Vertical Movement", 7, 190);
+			u.ctx.fillText("Vertical Movement", 7, tpos + 90);
 
 			u.ctx.fillStyle = "black";
-			tpos = u.valToPos(colletAxT[0], "y", true);
+			tpos = u.valToPos(colletRotMov[0], "y", true);
 			u.ctx.fillText("Collet", 2, tpos - 60);
 			u.ctx.fillStyle = "red";
 			u.ctx.fillText("Axial Torque", 7, tpos - 30);
