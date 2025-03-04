@@ -16,6 +16,7 @@ function loadScript(url, callback) {
 }
 
 var plotData = function () {
+	var vid = d.getElementById("v0");
 	const ids = [...Array(bendDieLatT.length).keys()];
 	const bendData = [
 		ids,
@@ -71,14 +72,26 @@ var plotData = function () {
 	const cursorOpts = {
 		lock: true,
 		sync: { key: "a" },
-		y: false,
+		//y: false,
+		focus: { prox: 4 },
+		drag: { x: true, y: true },
+		bind: {
+			mousedown: (u, targ, handler) => {
+				return (e) => {
+					vid.currentTime = Math.floor(
+						(vid.duration * u.cursor.idx) / u.data[0].length,
+					);
+					if (vid.paused) vid.play(); // play video when plot is clicked
+				};
+			},
+		},
 	};
 	let opts = {
-		width: window.innerWidth,
-		height: window.innerHeight - 90,
+		width: window.innerWidth - 30,
+		height: window.innerHeight - 277,
 		cursor: cursorOpts,
 		axes: [{}, { scale: "readings", side: 1, grid: { show: true } }],
-		scales: { auto: false, x: { time: false } },
+		scales: { auto: true, x: { time: false }, y: { range: [-50, 480] } },
 		legend: { show: false },
 	};
 	const drawHkBend = [
@@ -170,7 +183,17 @@ var plotData = function () {
 			{ label: "clampLatT", stroke: "red" },
 			{ label: "clampLatMov", stroke: "green" },
 		],
-		hooks: { draw: drawHkBend, ready: wheelZoomHk },
+		hooks: {
+			draw: drawHkBend,
+			ready: wheelZoomHk,
+			setSeries: [
+				(u, sIdx) => {
+					u.series.forEach((s, i) => {
+						s.width = i == sIdx ? 2 : 1;
+					});
+				},
+			],
+		},
 	};
 	bendOpts = Object.assign(opts, bendOpts);
 	let bendPlot = new uPlot(bendOpts, bendData, document.body);
@@ -178,6 +201,10 @@ var plotData = function () {
 	cursorOverride = d.getElementsByClassName("u-cursor-x");
 	for (i of [0]) cursorOverride[i].style = "border-right:3px solid #FF2D7D;";
 
+	vid.ontimeupdate = function () {
+		p = Math.floor((vid.currentTime / vid.duration) * bendData[0].length);
+		bendPlot.setCursor({ left: bendPlot.valToPos(bendData[0][p], "x") });
+	};
 	for (id of ["bendChart"]) d.getElementById(id).style.border = "solid";
 	d.body.appendChild(
 		d
@@ -194,11 +221,14 @@ var plotData = function () {
 
 	// allow dynamic resizing:
 	function getSize() {
-		return { width: window.innerWidth, height: window.innerHeight - 100 };
+		return { width: window.innerWidth - 30, height: window.innerHeight - 90 };
 	}
 	window.addEventListener("resize", (e) => {
 		bendPlot.setSize(getSize());
 	});
+
+	vid.src = "79.mov";
+	vid.load();
 };
 
 loadScript("dta" + proc.value + ".js", plotData);
