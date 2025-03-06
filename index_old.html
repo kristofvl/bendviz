@@ -2,9 +2,10 @@
 <html>
 	<head>
 		<script src="https://leeoniya.github.io/uPlot/dist/uPlot.iife.min.js"></script>
-		<link rel="shortcut icon" type="image/png" href="favicon.ico">
-		<link rel="stylesheet" href="https://leeoniya.github.io/uPlot/dist/uPlot.min.css">
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
+		<link
+			rel="stylesheet"
+			href="https://leeoniya.github.io/uPlot/dist/uPlot.min.css"
+		/>
 		<style>
 			html {
 				font-family: Arial, Helvetica, sans-serif;
@@ -21,7 +22,7 @@
 				font-size: 12px;
 				height: 180px;
 			}
-			#procsel {
+			#subjsel {
 				font-size: 18px;
 			}
 			.info {
@@ -66,28 +67,23 @@
 		<meta charset="utf-8" />
 	</head>
 	<body>
-		<div id="toprow">
-			<div class="topblk"><video id="v0" tabindex="0", autobuffer width="320" height="180">
-		        <source id="vid" type='video/mp4;codecs="avc1.42E01E, mp4a.40.2"'></source>
-		  </video></div>
-			<div>
-				Process_ID:
-				<input
-					id="procsel"
-					type="number"
-					min="1"
-					max="162"
-					step="1"
-					value="1"
-					onkeydown="return false"
-				/>
-				<a class="info"
-					>info<span class="ttip"><pre id="infotext">...</pre></span></a
-				>
-			</div>
-			<div id="stl_cont" style="width: 300px; height: 180px"> </div>
-		</div>
-		<script src="viz_new.js"></script>
+		<h1>
+			Process_ID:
+			<input
+				id="procsel"
+				type="number"
+				min="1"
+				max="162"
+				step="1"
+				value="1"
+				onkeydown="return false"
+			/>
+			<a class="info"
+				>info<span class="ttip"><pre id="infotext">...</pre></span></a
+			>
+		</h1>
+		<div id="toprow"></div>
+		<script src="viz.js"></script>
 		<div style="clear: both"></div>
 	</body>
 </html>

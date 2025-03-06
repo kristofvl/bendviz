@@ -1,9 +1,9 @@
 d = document; // get elements & start by retrieving the subject:
 wl = window.location;
 proc = d.getElementById("procsel");
-proc.value = wl.search.substr(5) == "" ? "1" : wl.search.substr(5);
+proc.value = wl.search.substr(5) == "" ? "79" : wl.search.substr(5);
 proc.oninput = function (e) {
-	wl.href = "index.html?prc=" + proc.value;
+	wl.href = "index_new.html?prc=" + proc.value;
 };
 
 function loadScript(url, callback) {
@@ -16,12 +16,31 @@ function loadScript(url, callback) {
 }
 
 var plotData = function () {
-	const ids = [...Array(bendDieLatMov.length).keys()];
-	const bendDieData = [ids, bendDieAng, bendDieLatMov];
-	const colletData = [ids, colletAxForce, colletAxMov];
-	const mandrelData = [ids, mandrelAxForce, mandrelAxMov];
-	const pressData = [ids, pressAxForce, pressAxMov, pressLatForce];
-	const wiperData = [ids, wiperAxForce, wiperLatForce, wiperLatMov];
+	var vid = d.getElementById("v0");
+	const ids = [...Array(bendDieLatT.length).keys()];
+	const bendData = [
+		ids,
+		bendDieLatT,
+		bendDieRotT,
+		bendDieVerT,
+		bendDieLatM,
+		bendDieRotA,
+		bendDieVerM,
+		colletAxT,
+		colletRotT,
+		colletAxMov,
+		colletRotMov,
+		mandrelAxLoad,
+		mandrelAxMov,
+		pressAxT,
+		pressLatT,
+		pressLeftAxT,
+		pressAxMov,
+		pressLatMov,
+		pressLeftAxMov,
+		clampLatT,
+		clampLatMov,
+	];
 	let uSync = uPlot.sync("both");
 	// wheel scroll zoom
 	const wheelZoomHk = [
@@ -53,150 +72,140 @@ var plotData = function () {
 	const cursorOpts = {
 		lock: true,
 		sync: { key: "a" },
-		y: false,
+		//y: false,
+		focus: { prox: 4 },
+		drag: { x: true, y: true },
+		bind: {
+			mousedown: (u, targ, handler) => {
+				return (e) => {
+					vid.currentTime = Math.floor(
+						(vid.duration * u.cursor.idx) / u.data[0].length,
+					);
+					if (vid.paused) vid.play(); // play video when plot is clicked
+				};
+			},
+		},
 	};
 	let opts = {
-		width: window.innerWidth,
-		height: window.innerHeight / 6,
+		width: window.innerWidth - 30,
+		height: window.innerHeight - 277,
 		cursor: cursorOpts,
 		axes: [{}, { scale: "readings", side: 1, grid: { show: true } }],
-		scales: { auto: false, x: { time: false } },
+		scales: { auto: true, x: { time: false }, y: { range: [-50, 480] } },
 		legend: { show: false },
 	};
-
-	const drawHkBendDie = [
+	const drawHkBend = [
 		(u) => {
-			u.ctx.fillStyle = "black";
 			u.ctx.textAlign = "left";
-			u.ctx.fillText("Bend Die", 2, 10);
+			u.ctx.fillStyle = "black";
+			tpos = u.valToPos(bendDieLatT[0], "y", true);
+			u.ctx.fillText("Bend Die", 2, tpos - 90);
 			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Angle", 7, 40);
+			u.ctx.fillText("Lateral Torque", 7, tpos - 60);
 			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Movement", 7, 70);
+			u.ctx.fillText("Rotating Torque", 7, tpos - 30);
+			u.ctx.fillStyle = "blue";
+			u.ctx.fillText("Vertical Torque", 7, tpos);
+			u.ctx.fillStyle = "purple";
+			u.ctx.fillText("Lateral Movement", 7, tpos + 30);
+			u.ctx.fillStyle = "grey";
+			u.ctx.fillText("Rotating Angle", 7, tpos + 60);
+			u.ctx.fillStyle = "brown";
+			u.ctx.fillText("Vertical Movement", 7, tpos + 90);
+
+			u.ctx.fillStyle = "black";
+			tpos = u.valToPos(colletRotMov[0], "y", true);
+			u.ctx.fillText("Collet", 2, tpos - 60);
+			u.ctx.fillStyle = "red";
+			u.ctx.fillText("Axial Torque", 7, tpos - 30);
+			u.ctx.fillStyle = "green";
+			u.ctx.fillText("Rotating Torque", 7, tpos);
+			u.ctx.fillStyle = "blue";
+			u.ctx.fillText("Axial Movement", 7, tpos + 30);
+			u.ctx.fillStyle = "purple";
+			u.ctx.fillText("Rotating Movement", 7, tpos + 60);
+
+			tpos = u.valToPos(mandrelAxLoad[0], "y", true);
+			u.ctx.fillStyle = "black";
+			u.ctx.fillText("Mandrel", 2, tpos - 30);
+			u.ctx.fillStyle = "red";
+			u.ctx.fillText("Axial Load", 7, tpos);
+			u.ctx.fillStyle = "green";
+			u.ctx.fillText("Axial Movement", 7, tpos + 30);
+
+			tpos = u.valToPos(pressAxT[0], "y", true);
+			u.ctx.fillStyle = "black";
+			u.ctx.fillText("Pressure Die", 2, tpos - 60);
+			u.ctx.fillStyle = "red";
+			u.ctx.fillText("Axial Torque", 7, tpos - 30);
+			u.ctx.fillStyle = "green";
+			u.ctx.fillText("Lateral Torque", 7, tpos);
+			u.ctx.fillStyle = "blue";
+			u.ctx.fillText("Left Axial Torque", 7, tpos + 30);
+			u.ctx.fillStyle = "purple";
+			u.ctx.fillText("Axial Movement", 7, tpos + 60);
+			u.ctx.fillStyle = "grey";
+			u.ctx.fillText("Lateral Movement", 7, tpos + 90);
+			u.ctx.fillStyle = "brown";
+			u.ctx.fillText("Left Axial Movement", 7, tpos + 120);
+
+			tpos = u.valToPos(clampLatT[0], "y", true);
+			u.ctx.fillStyle = "black";
+			u.ctx.fillText("Clamp Die", 2, tpos - 30);
+			u.ctx.fillStyle = "red";
+			u.ctx.fillText("Lateral Torque", 7, tpos);
+			u.ctx.fillStyle = "green";
+			u.ctx.fillText("Lateral Movement", 7, tpos + 30);
 		},
 	];
-	let bendDieOpts = {
-		id: "bendDieChart",
+	let bendOpts = {
+		id: "bendChart",
 		series: [
 			{ fill: false, ticks: { show: false } },
-			{ label: "bendDieAng", stroke: "red" },
-			{ label: "bendDieLatMov", stroke: "green" },
-		],
-		hooks: { draw: drawHkBendDie, ready: wheelZoomHk },
-	};
-	bendDieOpts = Object.assign(opts, bendDieOpts);
-	let bendDiePlot = new uPlot(bendDieOpts, bendDieData, document.body);
-
-	const drawHkCollet = [
-		(u) => {
-			u.ctx.fillStyle = "black";
-			u.ctx.textAlign = "left";
-			u.ctx.fillText("Collet", 2, 10);
-			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Axial force", 7, 40);
-			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Axial movement", 7, 70);
-		},
-	];
-	let colletOpts = {
-		id: "colletChart",
-		series: [
-			{ fill: false, ticks: { show: false } },
-			{ label: "colletAxForce", stroke: "red" },
-			{ label: "colletAxMov", stroke: "green" },
-		],
-		hooks: { draw: drawHkCollet, ready: wheelZoomHk },
-	};
-	colletOpts = Object.assign(opts, colletOpts);
-	let colletPlot = new uPlot(colletOpts, colletData, document.body);
-
-	const drawHkMandrel = [
-		(u) => {
-			u.ctx.fillStyle = "black";
-			u.ctx.textAlign = "left";
-			u.ctx.fillText("Mandrel", 2, 10);
-			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Axial force", 7, 40);
-			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Axial movement", 7, 70);
-		},
-	];
-	let mandrelOpts = {
-		id: "mandrelChart",
-		series: [
-			{ fill: false, ticks: { show: false } },
-			{ label: "mandrelAxForce", stroke: "red" },
+			{ label: "bendDieLatT", stroke: "red" },
+			{ label: "bendDieRotT", stroke: "green" },
+			{ label: "bendDieVerT", stroke: "blue" },
+			{ label: "bendDieLatM", stroke: "purple" },
+			{ label: "bendDieRotA", stroke: "grey" },
+			{ label: "bendDieVerM", stroke: "brown" },
+			{ label: "colletAxT", stroke: "red" },
+			{ label: "colletRotT", stroke: "green" },
+			{ label: "colletAxMov", stroke: "blue" },
+			{ label: "colletRotMov", stroke: "purple" },
+			{ label: "mandrelAxLoad", stroke: "red" },
 			{ label: "mandrelAxMov", stroke: "green" },
+			{ label: "pressAxT", stroke: "red" },
+			{ label: "pressLat", stroke: "green" },
+			{ label: "pressLeftAxT", stroke: "blue" },
+			{ label: "pressAxMov", stroke: "purple" },
+			{ label: "pressLatMov", stroke: "grey" },
+			{ label: "pressLeftAxMov", stroke: "brown" },
+			{ label: "clampLatT", stroke: "red" },
+			{ label: "clampLatMov", stroke: "green" },
 		],
-		hooks: { draw: drawHkMandrel, ready: wheelZoomHk },
-	};
-	mandrelOpts = Object.assign(opts, mandrelOpts);
-	let mandrelPlot = new uPlot(mandrelOpts, mandrelData, document.body);
-
-	const drawHkPress = [
-		(u) => {
-			u.ctx.fillStyle = "black";
-			u.ctx.textAlign = "left";
-			u.ctx.fillText("Pressure Die", 2, 10);
-			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Axial force", 7, 40);
-			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Axial movement", 7, 70);
-			u.ctx.fillStyle = "blue";
-			u.ctx.fillText("Lateral force", 7, 100);
+		hooks: {
+			draw: drawHkBend,
+			ready: wheelZoomHk,
+			setSeries: [
+				(u, sIdx) => {
+					u.series.forEach((s, i) => {
+						s.width = i == sIdx ? 2 : 1;
+					});
+				},
+			],
 		},
-	];
-	let pressOpts = {
-		id: "pressChart",
-		series: [
-			{ fill: false, ticks: { show: false } },
-			{ label: "pressAxForce", stroke: "red" },
-			{ label: "pressAxMov", stroke: "green" },
-			{ label: "pressLatForce", stroke: "blue" },
-		],
-		hooks: { draw: drawHkPress, ready: wheelZoomHk },
 	};
-	pressOpts = Object.assign(opts, pressOpts);
-	let pressPlot = new uPlot(pressOpts, pressData, document.body);
-
-	const drawHkWiper = [
-		(u) => {
-			u.ctx.fillStyle = "black";
-			u.ctx.textAlign = "left";
-			u.ctx.fillText("Wiper Die", 2, 10);
-			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Axial force", 7, 40);
-			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Lateral force", 7, 70);
-			u.ctx.fillStyle = "blue";
-			u.ctx.fillText("Lateral movement", 7, 100);
-		},
-	];
-	let wiperOpts = {
-		id: "wiperChart",
-		series: [
-			{ fill: false, ticks: { show: false } },
-			{ label: "wiperAxForce", stroke: "red" },
-			{ label: "wiperAxMov", stroke: "green" },
-			{ label: "wiperLatForce", stroke: "blue" },
-		],
-		hooks: { draw: drawHkWiper, ready: wheelZoomHk },
-	};
-	wiperOpts = Object.assign(opts, wiperOpts);
-	let wiperPlot = new uPlot(wiperOpts, wiperData, document.body);
+	bendOpts = Object.assign(opts, bendOpts);
+	let bendPlot = new uPlot(bendOpts, bendData, document.body);
 
 	cursorOverride = d.getElementsByClassName("u-cursor-x");
-	for (i of [0, 1, 2, 3, 4])
-		cursorOverride[i].style = "border-right:3px solid #FF2D7D;";
+	for (i of [0]) cursorOverride[i].style = "border-right:3px solid #FF2D7D;";
 
-	for (id of [
-		"bendDieChart",
-		"colletChart",
-		"mandrelChart",
-		"pressChart",
-		"wiperChart",
-	])
-		d.getElementById(id).style.border = "solid";
+	vid.ontimeupdate = function () {
+		p = Math.floor((vid.currentTime / vid.duration) * bendData[0].length);
+		bendPlot.setCursor({ left: bendPlot.valToPos(bendData[0][p], "x") });
+	};
+	for (id of ["bendChart"]) d.getElementById(id).style.border = "solid";
 	d.body.appendChild(
 		d
 			.createElement("p")
@@ -212,11 +221,14 @@ var plotData = function () {
 
 	// allow dynamic resizing:
 	function getSize() {
-		return { width: window.innerWidth, height: 320 };
+		return { width: window.innerWidth - 30, height: window.innerHeight - 90 };
 	}
 	window.addEventListener("resize", (e) => {
-		bendDie_plot.setSize(getSize());
+		bendPlot.setSize(getSize());
 	});
+
+	vid.src = "79.mov";
+	vid.load();
 };
 
 loadScript("dta" + proc.value + ".js", plotData);
