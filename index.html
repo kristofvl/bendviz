@@ -71,8 +71,7 @@
 		        <source id="vid" type='video/mp4;codecs="avc1.42E01E, mp4a.40.2"'></source>
 		  </video></div>
 			<div>
-				Process_ID:
-				<input
+				<pre>  Process_ID: <input
 					id="procsel"
 					type="number"
 					min="78"
@@ -80,12 +79,12 @@
 					step="1"
 					value="1"
 					onkeydown="return false"
-				/>
-				<a class="info"
-					>info<span class="ttip"><pre id="infotext">...</pre></span></a
-				>
+				/> <a class="info"
+					>info<span class="ttip"></span></a
+				></pre>
+
+				<pre id="infotext"></pre>
 			</div>
-			<div id="stl_cont" style="width: 300px; height: 180px"> </div>
 		</div>
 		<script src="viz.js"></script>
 		<div style="clear: both"></div>
