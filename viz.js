@@ -82,7 +82,9 @@ var plotData = function () {
 					vid.currentTime = Math.floor(
 						(vid.duration * u.cursor.idx) / u.data[0].length,
 					);
-					if (vid.paused) vid.play(); // play video when plot is clicked
+					if (vid.paused)
+						vid.play(); // play video when plot is clicked
+					else vid.pause();
 				};
 			},
 		},
@@ -191,11 +193,7 @@ var plotData = function () {
 			{ label: "clampLatT", stroke: "red" },
 			{ label: "clampLatMov", stroke: "green" },
 		],
-		hooks: {
-			draw: drawHkBend,
-			ready: wheelZoomHk,
-			setSeries: seriesHk,
-		},
+		hooks: { draw: drawHkBend, ready: wheelZoomHk, setSeries: seriesHk },
 	};
 	bendOpts = Object.assign(opts, bendOpts);
 	let bendPlot = new uPlot(bendOpts, bendData, document.body);
@@ -212,7 +210,9 @@ var plotData = function () {
 		d
 			.createElement("p")
 			.appendChild(
-				d.createTextNode("Scroll wheel zooms in and out, click to play."),
+				d.createTextNode(
+					"ⓘ The scroll wheel zooms in and out, clicking in the plot plays/pauses.",
+				),
 			),
 	);
 
