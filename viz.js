@@ -3,7 +3,7 @@ wl = window.location;
 proc = d.getElementById("procsel");
 proc.value = wl.search.substr(5) == "" ? "79" : wl.search.substr(5);
 proc.oninput = function (e) {
-	wl.href = "index_new.html?prc=" + proc.value;
+	wl.href = "index.html?prc=" + proc.value;
 };
 
 function loadScript(url, callback) {
@@ -210,9 +210,7 @@ var plotData = function () {
 		d
 			.createElement("p")
 			.appendChild(
-				d.createTextNode(
-					"Scroll wheel zooms in and out, double-click resets the plot, click&drag zooms to a segment.",
-				),
+				d.createTextNode("Scroll wheel zooms in and out, click to play."),
 			),
 	);
 
