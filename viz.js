@@ -5,6 +5,7 @@ proc.value = wl.search.substr(5) == "" ? "79" : wl.search.substr(5);
 proc.oninput = function (e) {
 	wl.href = "index.html?prc=" + proc.value;
 };
+playing = false;
 
 function loadScript(url, callback) {
 	var script = d.createElement("script");
@@ -158,6 +159,13 @@ var plotData = function () {
 			u.ctx.fillText("Lateral Movement", 7, tpos + 30);
 		},
 	];
+	const seriesHk = [
+		(u, sIdx) => {
+			u.series.forEach((s, i) => {
+				s.width = i == sIdx ? 2 : 1;
+			});
+		},
+	];
 	let bendOpts = {
 		id: "bendChart",
 		series: [
@@ -186,13 +194,7 @@ var plotData = function () {
 		hooks: {
 			draw: drawHkBend,
 			ready: wheelZoomHk,
-			setSeries: [
-				(u, sIdx) => {
-					u.series.forEach((s, i) => {
-						s.width = i == sIdx ? 2 : 1;
-					});
-				},
-			],
+			setSeries: seriesHk,
 		},
 	};
 	bendOpts = Object.assign(opts, bendOpts);
