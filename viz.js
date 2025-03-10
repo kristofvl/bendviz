@@ -128,13 +128,13 @@ var plotData = function () {
 			u.ctx.fillStyle = "purple";
 			u.ctx.fillText("Rotating Movement", 7, tpos + 60);
 
-			tpos = u.valToPos(mandrelAxLoad[0], "y", true);
+			tpos = u.valToPos(mandrelAxMov[0], "y", true);
 			u.ctx.fillStyle = "black";
-			u.ctx.fillText("Mandrel", 2, tpos - 30);
+			u.ctx.fillText("Mandrel", 2, tpos - 60);
 			u.ctx.fillStyle = "red";
-			u.ctx.fillText("Axial Load", 7, tpos);
+			u.ctx.fillText("Axial Load", 7, tpos - 30);
 			u.ctx.fillStyle = "green";
-			u.ctx.fillText("Axial Movement", 7, tpos + 30);
+			u.ctx.fillText("Axial Movement", 7, tpos);
 
 			tpos = u.valToPos(pressAxT[0], "y", true);
 			u.ctx.fillStyle = "black";
