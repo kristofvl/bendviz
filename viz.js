@@ -1,7 +1,7 @@
 d = document; // get elements & start by retrieving the subject:
 wl = window.location;
 proc = d.getElementById("procsel");
-proc.value = wl.search.substr(5) == "" ? "79" : wl.search.substr(5);
+proc.value = wl.search.substr(5) == "" ? "78" : wl.search.substr(5);
 proc.oninput = function (e) {
 	wl.href = "index.html?prc=" + proc.value;
 };
