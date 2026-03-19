@@ -8,25 +8,26 @@ import pandas as pd
 
 
 SENSOR_NAMES = [
-    "bendDieLatT","bendDieRotT","bendDieVerT","bendDieLatM","bendDieRotA","bendDieVerM",
-    "colletAxT","colletRotT","colletAxMov","colletRotMov",
-    "mandrelAxLoad","mandrelAxMov",
-    "pressAxT","pressLatT","pressLeftAxT","pressAxMov","pressLatMov","pressLeftAxMov",
-    "clampLatT","clampLatMov"
+    "bendDieLatT", "bendDieRotT", "bendDieVerT",
+    "bendDieLatM", "bendDieRotA", "bendDieVerM",
+    "colletAxT", "colletRotT", "colletAxMov", "colletRotMov",
+    "mandrelAxLoad", "mandrelAxMov",
+    "pressAxT", "pressLatT", "pressLeftAxT",
+    "pressAxMov", "pressLatMov", "pressLeftAxMov",
+    "clampLatT", "clampLatMov"
 ]
 
-# TubeBEND column mapping (ground-truth from your Exp_11 inspection)
 MAP_LOADS = {
     "bendDieLatT": "MACHINE_BEND-DIE_LATERAL_Max_Torque_[%]",
     "bendDieRotT": "MACHINE_BEND-DIE_ROTATING_Max_Torque_[%]",
     "bendDieVerT": "MACHINE_BEND-DIE_VERTICAL_Max_Torque_[%]",
-    "clampLatT":   "MACHINE_CLAMP-DIE_LATERAL_Max_Torque_[%]",
-    "colletAxT":   "MACHINE_COLLET_AXIAL_Max_Torque_[%]",
-    "colletRotT":  "MACHINE_COLLET_ROTATING_Max_Torque_[%]",
-    "mandrelAxLoad":"MACHINE_MANDREL_AXIAL_Max_Torque_[%]",
-    "pressAxT":    "MACHINE_PRESSURE-DIE_AXIAL_Max_Torque_[%]",
-    "pressLatT":   "MACHINE_PRESSURE-DIE_LATERAL_Max_Torque_[%]",
-    "pressLeftAxT":"MACHINE_PRESSURE-DIE_LEFT_AXIAL_Max_Torque_[%]",
+    "clampLatT": "MACHINE_CLAMP-DIE_LATERAL_Max_Torque_[%]",
+    "colletAxT": "MACHINE_COLLET_AXIAL_Max_Torque_[%]",
+    "colletRotT": "MACHINE_COLLET_ROTATING_Max_Torque_[%]",
+    "mandrelAxLoad": "MACHINE_MANDREL_AXIAL_Max_Torque_[%]",
+    "pressAxT": "MACHINE_PRESSURE-DIE_AXIAL_Max_Torque_[%]",
+    "pressLatT": "MACHINE_PRESSURE-DIE_LATERAL_Max_Torque_[%]",
+    "pressLeftAxT": "MACHINE_PRESSURE-DIE_LEFT_AXIAL_Max_Torque_[%]",
 }
 
 MAP_MOVES = {
@@ -35,86 +36,96 @@ MAP_MOVES = {
     "bendDieVerM": "BEND-DIE_VERTICAL_Movement_[mm]",
     "clampLatMov": "CLAMP-DIE_LATERAL_Movement_[mm]",
     "colletAxMov": "COLLET_AXIAL_Movement_[mm]",
-    "colletRotMov":"COLLET_ROTATING_Movement_[mm]",
-    "mandrelAxMov":"MANDREL_AXIAL_Movement_[mm]",
-    "pressAxMov":  "PRESSURE-DIE_AXIAL_Movement_[mm]",
+    "colletRotMov": "COLLET_ROTATING_Movement_[mm]",
+    "mandrelAxMov": "MANDREL_AXIAL_Movement_[mm]",
+    "pressAxMov": "PRESSURE-DIE_AXIAL_Movement_[mm]",
     "pressLatMov": "PRESSURE-DIE_LATERAL_Movement_[mm]",
-    "pressLeftAxMov":"PRESSURE-DIE_LEFT_AXIAL_Movement_[mm]",
+    "pressLeftAxMov": "PRESSURE-DIE_LEFT_AXIAL_Movement_[mm]",
 }
+
+
+def js_escape(s: str) -> str:
+    return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
 
 
 def get_time_vector(df: pd.DataFrame) -> np.ndarray:
     """
-    Return a numeric time vector for df.
-    Preference order:
-      1) a column containing 'Time' (case-insensitive)
-      2) the index if numeric-like
-      3) range(len(df))
+    Return numeric time vector. Prefer a Time column, then numeric index, else range.
     """
-    # 1) Find a 'Time' column
     time_cols = [c for c in df.columns if "time" in str(c).lower()]
     if time_cols:
-        t = pd.to_numeric(df[time_cols[0]], errors="coerce").to_numpy()
-        if np.isfinite(t).sum() >= max(2, int(0.5 * len(t))):
+        t = pd.to_numeric(df[time_cols[0]], errors="coerce").to_numpy(dtype=float)
+        if np.isfinite(t).sum() >= 2:
             return t
 
-    # 2) Try index
     try:
-        idx = pd.to_numeric(df.index, errors="coerce").to_numpy()
-        if np.isfinite(idx).sum() >= max(2, int(0.5 * len(idx))):
+        idx = pd.to_numeric(df.index, errors="coerce").to_numpy(dtype=float)
+        if np.isfinite(idx).sum() >= 2:
             return idx
     except Exception:
         pass
 
-    # 3) Fallback: sample index as time
     return np.arange(len(df), dtype=float)
 
 
-def resample_series(t: np.ndarray, y: np.ndarray, n: int) -> np.ndarray:
-    """
-    Resample (t, y) to n points using linear interpolation.
-    We normalize time to [0,1] for stability.
-    """
+def clean_xy(t: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     t = np.asarray(t, dtype=float)
     y = np.asarray(y, dtype=float)
 
     mask = np.isfinite(t) & np.isfinite(y)
     t = t[mask]
     y = y[mask]
-    if t.size < 2:
-        return np.zeros(n, dtype=float)
+
+    if t.size == 0:
+        return np.array([], dtype=float), np.array([], dtype=float)
 
     order = np.argsort(t)
     t = t[order]
     y = y[order]
 
+    # remove duplicate time values
     t_unique, idx = np.unique(t, return_index=True)
     y_unique = y[idx]
-    if t_unique.size < 2:
-        return np.zeros(n, dtype=float)
 
-    t0, t1 = t_unique[0], t_unique[-1]
+    return t_unique, y_unique
+
+
+def resample_series(t: np.ndarray, y: np.ndarray, n: int) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Resample to n points. Returns:
+      - resampled time vector in original units
+      - resampled signal
+    """
+    t, y = clean_xy(t, y)
+
+    if t.size < 2:
+        new_t = np.linspace(0.0, 1.0, n)
+        return new_t, np.zeros(n, dtype=float)
+
+    t0, t1 = t[0], t[-1]
     if t1 == t0:
-        return np.zeros(n, dtype=float)
+        new_t = np.linspace(t0, t1, n)
+        return new_t, np.full(n, y[0], dtype=float)
 
-    tn = (t_unique - t0) / (t1 - t0)
-    grid = np.linspace(0.0, 1.0, n)
-    return np.interp(grid, tn, y_unique)
+    new_t = np.linspace(t0, t1, n)
+    new_y = np.interp(new_t, t, y)
+    return new_t, new_y
 
 
-def quantize_and_offset(sensors: np.ndarray, quant: int = 100) -> np.ndarray:
+def quantize_and_offset(raw_sensors: np.ndarray, quant: int = 100) -> np.ndarray:
     """
-    bendviz-style quantization + stacking for display.
+    Produce old-style stacked/quantized arrays so the current legacy viz.js
+    still has something usable.
     """
-    numChannels, n = sensors.shape
+    sensors = np.nan_to_num(raw_sensors.copy(), nan=0.0)
 
-    TORQ_CHANNELS = {0,1,2,6,7,12,13,14,18}
-    DIST_CHANNELS = {3,4,5,8,9,11,15,16,17,19}
-
+    num_channels, _ = sensors.shape
     mins = np.nanmin(sensors, axis=1)
     maxs = np.nanmax(sensors, axis=1)
 
-    # Shared ranges (forces vs movements)
+    TORQ_CHANNELS = {0, 1, 2, 6, 7, 10, 12, 13, 14, 18}
+    DIST_CHANNELS = {3, 4, 5, 8, 9, 11, 15, 16, 17, 19}
+
     tmin = np.nanmin([mins[i] for i in TORQ_CHANNELS])
     tmax = np.nanmax([maxs[i] for i in TORQ_CHANNELS])
     dmin = np.nanmin([mins[i] for i in DIST_CHANNELS])
@@ -123,11 +134,10 @@ def quantize_and_offset(sensors: np.ndarray, quant: int = 100) -> np.ndarray:
     tspan = (tmax - tmin) if (tmax - tmin) != 0 else 1.0
     dspan = (dmax - dmin) if (dmax - dmin) != 0 else 1.0
 
-    out = np.zeros_like(sensors, dtype=float)
+    out = np.zeros_like(sensors, dtype=int)
 
-    for ch in range(numChannels):
+    for ch in range(num_channels):
         arr = sensors[ch]
-        arr = np.nan_to_num(arr, nan=0.0)
 
         if ch in TORQ_CHANNELS:
             q = quant * (((arr - tmin) / tspan) - 0.5)
@@ -137,7 +147,6 @@ def quantize_and_offset(sensors: np.ndarray, quant: int = 100) -> np.ndarray:
             span = (maxs[ch] - mins[ch]) if (maxs[ch] - mins[ch]) != 0 else 1.0
             q = quant * (((arr - mins[ch]) / span) - 0.5)
 
-        # offsets to match bendviz stacked layout
         if ch < 3:
             q += 450
         elif ch < 6:
@@ -154,48 +163,82 @@ def quantize_and_offset(sensors: np.ndarray, quant: int = 100) -> np.ndarray:
     return out
 
 
-def build_dta_for_exp(exp: dict, exp_id: int, n_samples: int) -> tuple[np.ndarray, str]:
+def build_experiment(exp: dict, exp_id: int, n_samples: int):
     dfL = exp["process_parameters_loads_machine"]
     dfM = exp["process_parameters_movements"]
 
     tL = get_time_vector(dfL)
     tM = get_time_vector(dfM)
 
-    sensors = np.zeros((len(SENSOR_NAMES), n_samples), dtype=float)
+    # Use movement time as master time if available, else loads
+    _, master_time = None, None
+    if np.isfinite(tM).sum() >= 2:
+        master_time, _dummy = resample_series(tM, np.zeros(len(tM)), n_samples)
+    else:
+        master_time, _dummy = resample_series(tL, np.zeros(len(tL)), n_samples)
+
+    raw_sensors = np.zeros((len(SENSOR_NAMES), n_samples), dtype=float)
 
     # Loads
     for sensor, col in MAP_LOADS.items():
         if col in dfL.columns:
-            y = pd.to_numeric(dfL[col], errors="coerce").to_numpy()
-            sensors[SENSOR_NAMES.index(sensor), :] = resample_series(tL, y, n_samples)
+            y = pd.to_numeric(dfL[col], errors="coerce").to_numpy(dtype=float)
+            _, new_y = resample_series(tL, y, n_samples)
+            raw_sensors[SENSOR_NAMES.index(sensor), :] = new_y
 
     # Movements
     for sensor, col in MAP_MOVES.items():
         if col in dfM.columns:
-            y = pd.to_numeric(dfM[col], errors="coerce").to_numpy()
-            sensors[SENSOR_NAMES.index(sensor), :] = resample_series(tM, y, n_samples)
+            y = pd.to_numeric(dfM[col], errors="coerce").to_numpy(dtype=float)
+            _, new_y = resample_series(tM, y, n_samples)
+            raw_sensors[SENSOR_NAMES.index(sensor), :] = new_y
 
-    info = f"Experiment: {exp_id}\\nSamples (resampled): {n_samples}\\nSource: TubeBEND"
-    return sensors, info
+    q_sensors = quantize_and_offset(raw_sensors, quant=100)
+
+    duration = float(master_time[-1] - master_time[0]) if len(master_time) > 1 else 0.0
+    info = (
+        f"Experiment: {exp_id}\n"
+        f"Samples (resampled): {n_samples}\n"
+        f"Duration [s]: {duration:.4f}\n"
+        f"Source: TubeBEND"
+    )
+
+    return master_time, raw_sensors, q_sensors, info
 
 
-def write_dta_js(out_path: Path, sensors_q: np.ndarray, info: str):
-    n = sensors_q.shape[1]
-    data_slice = slice(None, n-2) if n > 2 else slice(None)
-
+def write_js(out_path: Path, time: np.ndarray, raw_sensors: np.ndarray, q_sensors: np.ndarray, info: str):
     with out_path.open("w") as f:
+        # Real time axis for future frontend
+        f.write("var time=[")
+        f.write(",".join(f"{x:.10g}" for x in time))
+        f.write("];\n")
+
+        # Also keep ids for backwards compatibility if anything still references sample index
+        f.write("var ids=[")
+        f.write(",".join(str(i) for i in range(len(time))))
+        f.write("];\n")
+
+        # Raw arrays for future normalized plotting + hover actual values
         for i, name in enumerate(SENSOR_NAMES):
-            arr = sensors_q[i, data_slice]
+            arr = raw_sensors[i]
+            f.write(f"var {name}_raw=[")
+            f.write(",".join(f"{x:.10g}" for x in arr))
+            f.write("];\n")
+
+        # Quantized arrays for current legacy stacked plot
+        for i, name in enumerate(SENSOR_NAMES):
+            arr = q_sensors[i]
             f.write(f"var {name}=[")
             f.write(",".join(str(int(x)) for x in arr))
             f.write("];\n")
-        f.write(f"var info='{info}';\n")
+
+        f.write(f"var info='{js_escape(info)}';\n")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pkl", required=True, help="Path to experiments_process_and_results.pkl")
-    ap.add_argument("--out-dir", required=True, help="Where to write dta<id>.js")
+    ap.add_argument("--out-dir", required=True, help="Output directory for dta<id>.js")
     ap.add_argument("--n-samples", type=int, default=2000)
     ap.add_argument("--start", type=int, default=1)
     ap.add_argument("--end", type=int, default=318)
@@ -214,12 +257,9 @@ def main():
             print(f"SKIP: {key} not found")
             continue
 
-        exp = data[key]
-        sensors, info = build_dta_for_exp(exp, exp_id, args.n_samples)
-        sensors_q = quantize_and_offset(sensors, quant=100)
-
+        time, raw_sensors, q_sensors, info = build_experiment(data[key], exp_id, args.n_samples)
         out_path = out_dir / f"dta{exp_id}.js"
-        write_dta_js(out_path, sensors_q, info)
+        write_js(out_path, time, raw_sensors, q_sensors, info)
 
         if exp_id % 25 == 0:
             print(f"Done up to Exp_{exp_id}")
