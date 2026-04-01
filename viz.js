@@ -3,7 +3,7 @@ const wl = window.location;
 const proc = d.getElementById("procsel");
 const vid = d.getElementById("v0");
 
-const MIN_PROC = 0;
+const MIN_PROC = 2;
 const MAX_PROC = 318;
 
 let GLOBAL_ACTUAL_TIME = [];
